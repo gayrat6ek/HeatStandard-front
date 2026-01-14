@@ -50,26 +50,6 @@ export default function GroupsPage() {
     }
   };
 
-  // Lazy load children for a group
-  const loadGroupChildren = async (groupId: string): Promise<GroupNode[]> => {
-    const [childrenRes, productsRes] = await Promise.all([
-      api.get<PaginatedResponse<Group>>('/groups', {
-        params: { parent_id: groupId, limit: 100 }
-      }),
-      api.get<PaginatedResponse<any>>('/products', {
-        params: { group_id: groupId, limit: 1 }  // Just get count
-      })
-    ]);
-
-    return childrenRes.data.items.map((g: Group) => ({
-      ...g,
-      isExpanded: false,
-      isLoading: false,
-      isLoaded: false,
-      productCount: 0  // Will be loaded when expanded
-    }));
-  };
-
   useEffect(() => {
     fetchRootGroups();
   }, []);
