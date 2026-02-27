@@ -6,12 +6,7 @@ import { Loader2, ShoppingCart, Search, Eye } from 'lucide-react';
 
 const statusConfig: Record<string, { color: string; bgColor: string; label: string }> = {
   pending: { color: 'text-yellow-700', bgColor: 'bg-yellow-100', label: 'Ожидает' },
-  sent_to_iiko: { color: 'text-blue-700', bgColor: 'bg-blue-100', label: 'Отправлен в iiko' },
   confirmed: { color: 'text-green-700', bgColor: 'bg-green-100', label: 'Подтвержден' },
-  in_progress: { color: 'text-purple-700', bgColor: 'bg-purple-100', label: 'В процессе' },
-  completed: { color: 'text-emerald-700', bgColor: 'bg-emerald-100', label: 'Выполнен' },
-  cancelled: { color: 'text-slate-700', bgColor: 'bg-slate-100', label: 'Отменен' },
-  failed: { color: 'text-red-700', bgColor: 'bg-red-100', label: 'Ошибка' },
   declined: { color: 'text-red-700', bgColor: 'bg-red-100', label: 'Отклонен' },
 };
 
@@ -19,9 +14,7 @@ const statusFilters: Record<string, string> = {
   all: 'Все',
   pending: 'Ожидает',
   confirmed: 'Подтвержден',
-  completed: 'Выполнен',
   declined: 'Отклонен',
-  cancelled: 'Отменен',
 };
 
 // Format price with $ and smart decimals

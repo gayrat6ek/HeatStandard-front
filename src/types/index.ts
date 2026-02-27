@@ -93,7 +93,7 @@ export interface Order {
   customer_name: string;
   customer_phone: string;
   customer_address: string | null;
-  status: 'pending' | 'sent_to_iiko' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'failed' | 'declined';
+  status: 'pending' | 'confirmed' | 'declined';
   total_amount: number;
   notes?: string | null;
   telegram_message_id?: number | null;

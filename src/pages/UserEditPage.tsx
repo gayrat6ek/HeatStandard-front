@@ -14,6 +14,7 @@ export default function UserEditPage() {
   const [formData, setFormData] = useState({
     full_name: '',
     username: '',
+    password: '',
     phone_number: '',
     role: 'user',
     is_active: true,
@@ -27,6 +28,7 @@ export default function UserEditPage() {
         setFormData({
           full_name: user.full_name || '',
           username: user.username || '',
+          password: '',
           phone_number: user.phone_number || '',
           role: user.role,
           is_active: user.is_active,
@@ -104,8 +106,20 @@ export default function UserEditPage() {
               <input
                 type="text"
                 value={formData.username}
+                disabled={formData.role === 'admin'}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className={`w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500 ${formData.role === 'admin' ? 'opacity-50 cursor-not-allowed' : ''}`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Password (optional)</label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500"
+                placeholder="Enter new password"
               />
             </div>
             

@@ -177,10 +177,7 @@ export default function OrderEditPage() {
               >
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
-                <option value="preparing">Preparing</option>
-                <option value="ready">Ready</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="declined">Declined</option>
               </select>
             </div>
           </div>
