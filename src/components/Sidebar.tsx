@@ -3,7 +3,6 @@ import {
   LayoutDashboard, 
   Users, 
   Package, 
-  FolderTree,
   ShoppingCart,
   Building2,
   LogOut
@@ -14,7 +13,6 @@ const navigation = [
   { name: 'Главная', href: '/', icon: LayoutDashboard },
   { name: 'Пользователи', href: '/users', icon: Users },
   { name: 'Товары', href: '/products', icon: Package },
-  { name: 'Группы', href: '/groups', icon: FolderTree },
   { name: 'Заказы', href: '/orders', icon: ShoppingCart },
   { name: 'Организации', href: '/organizations', icon: Building2 },
 ];
