@@ -33,6 +33,7 @@ export default function ProductsPage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [totals, setTotals] = useState({ products: 0, groups: 0 });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -65,11 +66,16 @@ export default function ProductsPage() {
   const fetchRootGroups = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get<PaginatedResponse<Group>>('/groups', {
-        params: { parent_id: 'null', limit: 100 }
-      });
+      const [groupsRes, productsRes] = await Promise.all([
+        api.get<PaginatedResponse<Group>>('/groups', {
+          params: { parent_id: 'null', limit: 100 }
+        }),
+        api.get<PaginatedResponse<Product>>('/products', {
+          params: { limit: 1, is_active: true }
+        })
+      ]);
 
-      const groups: GroupNode[] = response.data.items.map((g: Group) => ({
+      const groups: GroupNode[] = groupsRes.data.items.map((g: Group) => ({
         ...g,
         isExpanded: false,
         isLoading: false,
@@ -77,6 +83,12 @@ export default function ProductsPage() {
       }));
 
       setRootGroups(groups);
+      
+      // Update totals
+      setTotals({
+        groups: groupsRes.data.total || 0,
+        products: productsRes.data.total || 0
+      });
     } catch (error) {
       console.error('Failed to fetch root groups:', error);
     } finally {
@@ -336,8 +348,15 @@ export default function ProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Товары</h1>
-          <p className="text-slate-500">Управление товарами из iiko (нажмите на группу для раскрытия)</p>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            Товары
+            {!isLoading && (
+              <span className="text-sm font-medium px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full">
+                Всего активно: {totals.products} товаров / {totals.groups} корневых групп
+              </span>
+            )}
+          </h1>
+          <p className="text-slate-500 mt-1">Управление товарами из iiko (нажмите на группу для раскрытия)</p>
         </div>
         <button
           onClick={syncProducts}
