@@ -8,7 +8,6 @@ interface GroupNode extends Group {
   isExpanded: boolean;
   isLoading: boolean;
   isLoaded: boolean;
-  productCount?: number;
   childCount?: number;
 }
 
@@ -114,17 +113,12 @@ export default function GroupsPage() {
     })));
 
     try {
-      // Load children and get product count
-      const [childrenRes, productsRes] = await Promise.all([
-        api.get<PaginatedResponse<Group>>('/groups', {
-          params: { parent_id: groupId, limit: 100 }
-        }),
-        api.get<PaginatedResponse<any>>('/products', {
-          params: { group_id: groupId, limit: 1 }
-        })
-      ]);
+      // Load children
+      const response = await api.get<PaginatedResponse<Group>>('/groups', {
+        params: { parent_id: groupId, limit: 100 }
+      });
 
-      const children: GroupNode[] = childrenRes.data.items.map((g: Group) => ({
+      const children: GroupNode[] = response.data.items.map((g: Group) => ({
         ...g,
         isExpanded: false,
         isLoading: false,
@@ -135,7 +129,6 @@ export default function GroupsPage() {
         ...g,
         children,
         childCount: children.length,
-        productCount: productsRes.data.total,
         isExpanded: true,
         isLoading: false,
         isLoaded: true
@@ -188,7 +181,7 @@ export default function GroupsPage() {
             {group.isLoaded ? `${group.childCount || 0} subgroups` : '-'}
           </td>
           <td className="px-6 py-4 text-slate-600">
-            {group.isLoaded ? `${group.productCount || 0} products` : '-'}
+            {group.active_products_count ?? 0} products
           </td>
           <td className="px-6 py-4">
             <span

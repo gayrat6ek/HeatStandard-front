@@ -53,6 +53,7 @@ export interface Group {
   organization_id: string;
   is_included_in_menu: boolean;
   is_active: boolean;
+  active_products_count?: number;
   created_at: string;
   updated_at: string;
 }

@@ -289,11 +289,9 @@ export default function ProductsPage() {
               )}
               <FolderOpen className="w-5 h-5 text-amber-500" />
               <span className="font-semibold text-slate-700">{group.name_ru}</span>
-              {group.isLoaded && (
-                <span className="text-sm text-slate-400 ml-2">
-                  ({group.children?.length || 0} подгрупп, {group.products?.length || 0} товаров)
-                </span>
-              )}
+              <span className="text-sm text-slate-400 ml-2">
+                ({group.isLoaded ? `${group.children?.length || 0} подгрупп, ` : ''}{group.active_products_count ?? 0} товаров)
+              </span>
             </div>
           </td>
         </tr>
