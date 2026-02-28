@@ -10,6 +10,9 @@ interface GroupNode extends Group {
   isExpanded: boolean;
   isLoading: boolean;
   isLoaded: boolean;
+  productsPage?: number;
+  hasMoreProducts?: boolean;
+  isLoadingMoreProducts?: boolean;
 }
 
 // Format price with $ and smart decimals
@@ -81,13 +84,13 @@ export default function ProductsPage() {
     }
   };
 
-  const loadGroupContent = async (groupId: string): Promise<{ children: GroupNode[], products: Product[] }> => {
+  const loadGroupContent = async (groupId: string): Promise<{ children: GroupNode[], products: Product[], page: number, pages: number }> => {
     const [childrenRes, productsRes] = await Promise.all([
       api.get<PaginatedResponse<Group>>('/groups', {
         params: { parent_id: groupId, limit: 100 }
       }),
       api.get<PaginatedResponse<Product>>('/products', {
-        params: { group_id: groupId, limit: 100 }
+        params: { group_id: groupId, limit: 100, page: 1 }
       })
     ]);
 
@@ -98,7 +101,12 @@ export default function ProductsPage() {
       isLoaded: false
     }));
 
-    return { children, products: productsRes.data.items };
+    return { 
+      children, 
+      products: productsRes.data.items,
+      page: 1,
+      pages: Math.ceil((productsRes.data.total || 0) / 100)
+    };
   };
 
   useEffect(() => {
@@ -117,33 +125,34 @@ export default function ProductsPage() {
     }
   };
 
-  const toggleGroup = async (groupId: string) => {
-    const updateGroupInTree = (
-      groups: GroupNode[],
-      targetId: string,
-      updater: (g: GroupNode) => GroupNode
-    ): GroupNode[] => {
-      return groups.map(group => {
-        if (group.id === targetId) {
-          return updater(group);
-        }
-        if (group.children && group.children.length > 0) {
-          return { ...group, children: updateGroupInTree(group.children, targetId, updater) };
-        }
-        return group;
-      });
-    };
-
-    const findGroup = (groups: GroupNode[], targetId: string): GroupNode | null => {
-      for (const g of groups) {
-        if (g.id === targetId) return g;
-        if (g.children) {
-          const found = findGroup(g.children, targetId);
-          if (found) return found;
-        }
+  const updateGroupInTree = (
+    groups: GroupNode[],
+    targetId: string,
+    updater: (g: GroupNode) => GroupNode
+  ): GroupNode[] => {
+    return groups.map(group => {
+      if (group.id === targetId) {
+        return updater(group);
       }
-      return null;
-    };
+      if (group.children && group.children.length > 0) {
+        return { ...group, children: updateGroupInTree(group.children, targetId, updater) };
+      }
+      return group;
+    });
+  };
+
+  const findGroup = (groups: GroupNode[], targetId: string): GroupNode | null => {
+    for (const g of groups) {
+      if (g.id === targetId) return g;
+      if (g.children) {
+        const found = findGroup(g.children, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const toggleGroup = async (groupId: string) => {
 
     const targetGroup = findGroup(rootGroups, groupId);
     if (!targetGroup) return;
@@ -162,12 +171,14 @@ export default function ProductsPage() {
     })));
 
     try {
-      const { children, products } = await loadGroupContent(groupId);
+      const { children, products, page, pages } = await loadGroupContent(groupId);
 
       setRootGroups(prev => updateGroupInTree(prev, groupId, g => ({
         ...g,
         children,
         products,
+        productsPage: page,
+        hasMoreProducts: page < pages,
         isExpanded: true,
         isLoading: false,
         isLoaded: true
@@ -178,6 +189,32 @@ export default function ProductsPage() {
         ...g,
         isLoading: false
       })));
+    }
+  };
+
+  const loadMoreProducts = async (groupId: string) => {
+    const targetGroup = findGroup(rootGroups, groupId);
+    if (!targetGroup || targetGroup.isLoadingMoreProducts || !targetGroup.hasMoreProducts) return;
+
+    const nextPage = (targetGroup.productsPage || 1) + 1;
+
+    setRootGroups(prev => updateGroupInTree(prev, groupId, g => ({ ...g, isLoadingMoreProducts: true })));
+
+    try {
+      const response = await api.get<PaginatedResponse<Product>>('/products', {
+        params: { group_id: groupId, limit: 100, page: nextPage }
+      });
+
+      setRootGroups(prev => updateGroupInTree(prev, groupId, g => ({
+        ...g,
+        products: [...(g.products || []), ...response.data.items],
+        productsPage: nextPage,
+        hasMoreProducts: nextPage < Math.ceil((response.data.total || 0) / 100),
+        isLoadingMoreProducts: false
+      })));
+    } catch (error) {
+      console.error('Failed to load more products:', error);
+      setRootGroups(prev => updateGroupInTree(prev, groupId, g => ({ ...g, isLoadingMoreProducts: false })));
     }
   };
 
@@ -264,6 +301,32 @@ export default function ProductsPage() {
           <>
             {group.children?.map(child => renderGroup(child, indent + 1))}
             {group.products?.map(product => renderProduct(product, indent + 1))}
+            {group.hasMoreProducts && (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center border-t border-slate-100 bg-white">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loadMoreProducts(group.id);
+                    }}
+                    disabled={group.isLoadingMoreProducts}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {group.isLoadingMoreProducts ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin text-slate-500" />
+                        Загрузка...
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4 mr-2 text-slate-500" />
+                        Показать еще товары
+                      </>
+                    )}
+                  </button>
+                </td>
+              </tr>
+            )}
           </>
         )}
       </>
